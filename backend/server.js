@@ -55,3 +55,19 @@ const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
   console.log(`Server started on port ${PORT}`);
 });
+
+// 修改客户信息
+app.put('/clients/:id', (req, res) => {
+  const { id } = req.params;
+  const { client_name, backend_url } = req.body;
+  const sql = 'UPDATE clients SET client_name = ?, backend_url = ? WHERE id = ?';
+  
+  db.query(sql, [client_name, backend_url, id], (err, result) => {
+    if (err) {
+      console.error('Database error:', err);
+      res.status(500).send('Database error');
+      return;
+    }
+    res.send({ message: 'Client updated' });
+  });
+});

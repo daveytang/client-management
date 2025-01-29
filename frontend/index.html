@@ -98,6 +98,103 @@
           alert('Error: ' + error.message);
         });
     });
+
+
+    // 新增搜索函数
+function searchClient() {
+  const keyword = document.getElementById('search-input').value.trim().toUpperCase();
+  const clientList = document.getElementById('client-list');
+  clientList.innerHTML = ''; // 清空当前列表
+
+  fetch(`${API_URL}/clients`)
+    .then(response => response.json())
+    .then(data => {
+      // 过滤匹配项（模糊搜索）
+      const filtered = data.filter(client => 
+        client.client_code.toUpperCase().includes(keyword)
+      );
+      // 渲染结果
+      filtered.forEach(client => {
+        const li = document.createElement('li');
+        const a = document.createElement('a');
+        a.href = client.backend_url;
+        a.textContent = `${client.client_code} - ${client.client_name}`;
+        a.target = '_blank';
+        li.appendChild(a);
+        clientList.appendChild(li);
+      });
+    });
+}
+
+// 新增：弹出编辑表单
+function openEditForm(client) {
+  const formHtml = `
+    <div id="edit-form" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border: 1px solid #ddd; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
+      <h3>修改客户信息</h3>
+      <label>客户编号：<input type="text" id="edit-code" value="${client.client_code}" readonly></label><br>
+      <label>客户名称：<input type="text" id="edit-name" value="${client.client_name}" required></label><br>
+      <label>后台地址：<input type="text" id="edit-url" value="${client.backend_url}" required></label><br>
+      <button onclick="saveEdit(${client.id})">保存</button>
+      <button onclick="closeEditForm()">取消</button>
+    </div>
+  `;
+  document.body.insertAdjacentHTML('beforeend', formHtml);
+}
+
+// 新增：关闭编辑表单
+function closeEditForm() {
+  document.getElementById('edit-form').remove();
+}
+
+// 新增：保存修改
+function saveEdit(id) {
+  const client = {
+    client_name: document.getElementById('edit-name').value,
+    backend_url: document.getElementById('edit-url').value
+  };
+
+  fetch(`${API_URL}/clients/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(client)
+  })
+    .then(response => {
+      if (!response.ok) throw new Error('保存失败');
+      closeEditForm();
+      loadClients(); // 刷新列表
+      alert('修改成功！');
+    })
+    .catch(error => alert(error.message));
+}
+
+// 修改原有渲染代码，添加点击事件
+function renderClient(client) {
+  const li = document.createElement('li');
+  const a = document.createElement('a');
+  a.href = client.backend_url;
+  a.textContent = `${client.client_code} - ${client.client_name}`;
+  a.target = '_blank';
+  // 添加右键菜单（可选）
+  a.addEventListener('click', (e) => {
+    e.preventDefault(); // 阻止默认跳转
+    openEditForm(client);
+  });
+  li.appendChild(a);
+  return li;
+}
+
+// 修改 loadClients 函数中的渲染逻辑
+function loadClients() {
+  fetch(`${API_URL}/clients`)
+    .then(response => response.json())
+    .then(data => {
+      const clientList = document.getElementById('client-list');
+      clientList.innerHTML = '';
+      data.forEach(client => {
+        clientList.appendChild(renderClient(client));
+      });
+    });
+}
   </script>
 </body>
 </html>
