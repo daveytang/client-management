@@ -203,6 +203,63 @@ function loadClients() {
       });
     });
 }
+
+// 加载分页数据
+function loadClients(page = 1) {
+  fetch(`${API_URL}/clients?page=${page}&pageSize=25`)
+    .then(response => response.json())
+    .then(({ data, total, page, pageSize }) => {
+      const clientList = document.getElementById('client-list');
+      clientList.innerHTML = '';
+      data.forEach(client => {
+        clientList.appendChild(renderClient(client));
+      });
+
+      // 渲染分页按钮
+      renderPagination(total, page, pageSize);
+    });
+}
+
+// 渲染分页按钮
+function renderPagination(total, currentPage, pageSize) {
+  const totalPages = Math.ceil(total / pageSize);
+  const pagination = document.getElementById('pagination');
+  pagination.innerHTML = '';
+
+  for (let i = 1; i <= totalPages; i++) {
+    const button = document.createElement('button');
+    button.textContent = i;
+    button.style.margin = '0 5px';
+    button.disabled = i === currentPage;
+    button.onclick = () => loadClients(i);
+    pagination.appendChild(button);
+  }
+}
+
+// 初始化加载第一页
+loadClients(1);
+
+function searchClient() {
+  const keyword = document.getElementById('search-input').value.trim().toUpperCase();
+  const page = 1; // 搜索时默认加载第一页
+
+  fetch(`${API_URL}/clients?page=${page}&pageSize=25`)
+    .then(response => response.json())
+    .then(({ data, total }) => {
+      const filtered = data.filter(client => 
+        client.client_code.toUpperCase().includes(keyword)
+      );
+
+      const clientList = document.getElementById('client-list');
+      clientList.innerHTML = '';
+      filtered.forEach(client => {
+        clientList.appendChild(renderClient(client));
+      });
+
+      // 清空分页（或根据搜索后的总数重新渲染）
+      document.getElementById('pagination').innerHTML = '';
+    });
+}
   </script>
 </body>
 </html>
