@@ -23,18 +23,43 @@ db.connect((err) => {
   console.log('MySQL connected...');
 });
 
-// 获取所有客户
+// 获取分页客户列表
 app.get('/clients', (req, res) => {
-  const sql = 'SELECT * FROM clients';
-  db.query(sql, (err, results) => {
-    if (err) {
-      console.error('Database error:', err);
-      res.status(500).send('Database error');
-      return;
-    }
-    res.send(results);
+  const page = parseInt(req.query.page) || 1;     // 当前页码
+  const pageSize = parseInt(req.query.pageSize) || 25; // 每页条数
+  const offset = (page - 1) * pageSize;
+
+  // 查询分页数据
+  const sqlData = 'SELECT * FROM clients LIMIT ?, ?';
+  const sqlCount = 'SELECT COUNT(*) AS total FROM clients';
+
+    // 先获取总条数
+    db.query(sqlCount, (err, countResult) => {
+      if (err) {
+        console.error('Database error:', err);
+        res.status(500).send('Database error');
+        return;
+      }
+  
+      const total = countResult[0].total;
+  
+      // 再获取当前页数据
+      db.query(sqlData, [offset, pageSize], (err, dataResult) => {
+        if (err) {
+          console.error('Database error:', err);
+          res.status(500).send('Database error');
+          return;
+        }
+  
+        res.send({
+          data: dataResult,
+          total: total,
+          page: page,
+          pageSize: pageSize
+        });
+      });
+    });
   });
-});
 
 // 添加新客户
 app.post('/clients', (req, res) => {
