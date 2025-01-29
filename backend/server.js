@@ -46,3 +46,20 @@ app.listen(PORT, () => {
 });
 
 app.use(express.static('frontend'));
+
+// 在 server.js 中添加以下代码
+app.post('/clients', (req, res) => {
+    const client = req.body;
+    console.log('Received client data:', client); // 打印接收到的数据
+
+    const sql = 'INSERT INTO clients SET ?';
+    db.query(sql, client, (err, result) => {
+        if (err) {
+            console.error('Database error:', err); // 打印错误日志
+            res.status(500).send('Database error');
+            return;
+        }
+        console.log('Client inserted:', result); // 打印插入结果
+        res.send('Client added...');
+    });
+});
