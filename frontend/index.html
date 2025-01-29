@@ -61,5 +61,34 @@
             });
         });
     </script>
+    <script>
+        document.getElementById('add-client-form').addEventListener('submit', function(event) {
+          event.preventDefault();
+          const client = {
+            client_code: document.getElementById('client-code').value,
+            client_name: document.getElementById('client-name').value,
+            backend_url: document.getElementById('backend-url').value
+          };
+      
+          fetch('https://backend.zeabur.app/clients', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(client)
+          })
+            .then(response => {
+              if (!response.ok) {
+                return response.text().then(text => { throw new Error(text) });
+              }
+              return response.text();
+            })
+            .then(() => {
+              alert('Client added successfully');
+              location.reload();
+            })
+            .catch(error => {
+              alert('Error: ' + error.message); // 显示错误信息
+            });
+        });
+      </script>
 </body>
 </html>
