@@ -17,6 +17,16 @@
 </head>
 <body>
   <h1>Client Management</h1>
+  <!-- 新增搜索框 -->
+  <div style="margin: 20px 0;">
+    <input 
+      type="text" 
+      id="search-input" 
+      placeholder="输入编号（如 JW001）" 
+      style="padding: 8px; width: 300px;"
+    >
+    <button onclick="searchClient()" style="padding: 8px 16px;">搜索</button>
+  </div>
   <ul id="client-list"></ul>
 
   <h2>Add New Client</h2>
