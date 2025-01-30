@@ -1,98 +1,92 @@
 const express = require('express');
 const mysql = require('mysql');
-const cors = require('cors'); // 解决跨域问题
+const cors = require('cors');
+const Joi = require('joi'); // 数据校验
 const app = express();
 
-// 启用跨域支持（允许所有域名，生产环境建议限制为前端域名）
-app.use(cors());
-// 解析 JSON 请求体
-app.use(express.json());
-
-// 数据库配置（从环境变量读取）
+// 数据库配置
 const db = mysql.createConnection({
-  host: process.env.DB_HOST || 'localhost',
-  user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD || '',
-  database: process.env.DB_NAME || 'client_management',
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
   port: process.env.DB_PORT || 3306
 });
 
 // 连接数据库
-db.connect((err) => {
-  if (err) throw err;
-  console.log('MySQL connected...');
+db.connect(err => {
+  if (err) throw new Error(`数据库连接失败: ${err.message}`);
+  console.log('✅ MySQL connected');
 });
 
-// 获取分页客户列表
+// 中间件
+app.use(cors());
+app.use(express.json());
+
+// 数据校验规则
+const clientSchema = Joi.object({
+  client_code: Joi.string().pattern(/^JW\d{3}$/).required(),
+  client_name: Joi.string().min(2).max(50).required(),
+  backend_url: Joi.string().uri().required()
+});
+
+// 分页获取客户列表
 app.get('/clients', (req, res) => {
-  const page = parseInt(req.query.page) || 1;     // 当前页码
-  const pageSize = parseInt(req.query.pageSize) || 25; // 每页条数
+  const page = parseInt(req.query.page) || 1;
+  const pageSize = parseInt(req.query.pageSize) || 25;
   const offset = (page - 1) * pageSize;
 
-  // 查询分页数据
-  const sqlData = 'SELECT * FROM clients LIMIT ?, ?';
-  const sqlCount = 'SELECT COUNT(*) AS total FROM clients';
+  const countQuery = 'SELECT COUNT(*) AS total FROM clients';
+  const dataQuery = 'SELECT * FROM clients LIMIT ?, ?';
 
-    // 先获取总条数
-    db.query(sqlCount, (err, countResult) => {
-      if (err) {
-        console.error('Database error:', err);
-        res.status(500).send('Database error');
-        return;
-      }
-  
-      const total = countResult[0].total;
-  
-      // 再获取当前页数据
-      db.query(sqlData, [offset, pageSize], (err, dataResult) => {
-        if (err) {
-          console.error('Database error:', err);
-          res.status(500).send('Database error');
-          return;
-        }
-  
-        res.send({
-          data: dataResult,
-          total: total,
-          page: page,
-          pageSize: pageSize
-        });
+  db.query(countQuery, (err, countRes) => {
+    if (err) return handleDBError(res, err);
+    
+    db.query(dataQuery, [offset, pageSize], (err, dataRes) => {
+      if (err) return handleDBError(res, err);
+      
+      res.json({
+        data: dataRes,
+        total: countRes[0].total,
+        page,
+        pageSize
       });
     });
   });
-
-// 添加新客户
-app.post('/clients', (req, res) => {
-  const client = req.body;
-  const sql = 'INSERT INTO clients SET ?';
-  db.query(sql, client, (err, result) => {
-    if (err) {
-      console.error('Database error:', err);
-      res.status(500).send('Database error');
-      return;
-    }
-    res.send({ message: 'Client added', id: result.insertId });
-  });
 });
 
-// 启动服务器
-const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => {
-  console.log(`Server started on port ${PORT}`);
+// 添加客户
+app.post('/clients', (req, res) => {
+  const { error } = clientSchema.validate(req.body);
+  if (error) return res.status(400).json({ error: error.details[0].message });
+
+  const query = 'INSERT INTO clients SET ?';
+  db.query(query, req.body, (err, result) => {
+    if (err) return handleDBError(res, err);
+    res.json({ id: result.insertId, ...req.body });
+  });
 });
 
 // 修改客户信息
 app.put('/clients/:id', (req, res) => {
-  const { id } = req.params;
-  const { client_name, backend_url } = req.body;
-  const sql = 'UPDATE clients SET client_name = ?, backend_url = ? WHERE id = ?';
-  
-  db.query(sql, [client_name, backend_url, id], (err, result) => {
-    if (err) {
-      console.error('Database error:', err);
-      res.status(500).send('Database error');
-      return;
-    }
-    res.send({ message: 'Client updated' });
+  const { error } = clientSchema.validate(req.body);
+  if (error) return res.status(400).json({ error: error.details[0].message });
+
+  const query = 'UPDATE clients SET ? WHERE id = ?';
+  db.query(query, [req.body, req.params.id], (err) => {
+    if (err) return handleDBError(res, err);
+    res.json({ message: '更新成功' });
   });
+});
+
+// 错误处理
+function handleDBError(res, err) {
+  console.error('❌ 数据库错误:', err);
+  return res.status(500).json({ error: '数据库操作失败' });
+}
+
+// 启动服务
+const PORT = process.env.PORT || 8080;
+app.listen(PORT, () => {
+  console.log(`🚀 服务已启动，端口：${PORT}`);
 });

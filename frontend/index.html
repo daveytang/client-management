@@ -1,302 +1,287 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>玄古客户终端后台</title>
-  <style>
-    body { font-family: Arial, sans-serif; max-width: 800px; margin: 20px auto; padding: 20px; }
-    ul { list-style: none; padding: 0; }
-    li { margin: 10px 0; }
-    a { color: #007bff; text-decoration: none; }
-    form { margin-top: 20px; border-top: 1px solid #ddd; padding-top: 20px; }
-    label { display: block; margin: 10px 0; }
-    input { width: 300px; padding: 5px; }
-    button { background: #007bff; color: white; border: none; padding: 8px 16px; cursor: pointer; }
-  </style>
+  <title>玄古客户终端管理系统</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-<!-- 顶部固定区域 -->
-<div class="sticky top-0 bg-white shadow-lg p-6 z-50">
-  <h1 class="text-3xl font-bold text-gray-800 mb-4">客户终端管理</h1>
-  <!-- 搜索框 -->
-  <div class="mb-4 flex gap-2">
-    <input 
-      type="text" 
-      id="search-input" 
-      placeholder="输入编号（如 JW001）" 
-      class="flex-1 p-2 border rounded-lg focus:ring-2 focus:ring-blue-400 outline-none"
-    >
-    <button 
-      onclick="searchClient()" 
-      class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-    >
-      搜索
-    </button>
-  </div>
-    <!-- 添加客户表单 -->
-  <form id="add-client-form" class="space-y-4 bg-gray-50 p-4 rounded-lg">
-    <h2 class="text-xl font-semibold text-gray-700">添加新客户终端</h2>
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <input 
-        type="text" 
-        id="client-code" 
-        placeholder="Client Code" 
-        class="p-2 border rounded focus:ring-2 focus:ring-blue-400 outline-none"
-        required
-      >
-      <input 
-        type="text" 
-        id="client-name" 
-        placeholder="Client Name" 
-        class="p-2 border rounded focus:ring-2 focus:ring-blue-400 outline-none"
-        required
-      >
-      <input 
-        type="text" 
-        id="backend-url" 
-        placeholder="Backend URL" 
-        class="p-2 border rounded focus:ring-2 focus:ring-blue-400 outline-none"
-        required
-      >
-    </div>
-    <button 
-      type="submit" 
-      class="w-full md:w-auto px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
-    >
-      添加
-    </button>
-  </form>
-</div>
+<body class="bg-gray-100">
+  <div class="container mx-auto px-4 py-8 max-w-6xl">
+    <!-- 搜索和添加区域 -->
+    <div class="bg-white rounded-xl shadow-lg p-6 mb-6 sticky top-4 z-50">
+      <h1 class="text-3xl font-bold text-gray-800 mb-6">客户终端管理</h1>
+      
+      <div class="flex gap-4 mb-6">
+        <input 
+          type="text" 
+          id="search-input" 
+          placeholder="输入客户编号 (如 JW001)"
+          class="flex-1 p-2 border rounded-lg focus:ring-2 focus:ring-blue-400"
+        >
+        <button 
+          onclick="searchClients()"
+          class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+        >
+          搜索
+        </button>
+      </div>
 
-<!-- 客户列表 -->
-<div class="mt-6">
-  <ul id="client-list" class="space-y-2">
-    <!-- 动态加载的客户项 -->
-    <li class="p-4 bg-white rounded-lg shadow hover:shadow-md transition-shadow">
-      <a 
-        href="#" 
-        class="text-blue-500 hover:text-blue-600"
-        onclick="openEditForm(...)"
-      >
-        JW001 - Example Client
-      </a>
-    </li>
-  </ul>
-    <!-- 分页控件 -->
-    <div id="pagination" class="mt-6 flex justify-center gap-2"></div>
+      <form id="add-form" class="bg-gray-50 p-4 rounded-lg space-y-4">
+        <h2 class="text-xl font-semibold text-gray-700">添加新客户</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <input
+            type="text"
+            id="client-code"
+            placeholder="客户编号 (JW001)"
+            class="p-2 border rounded focus:ring-2 focus:ring-green-400"
+            pattern="JW\d{3}"
+            required
+          >
+          <input
+            type="text"
+            id="client-name"
+            placeholder="客户名称"
+            class="p-2 border rounded focus:ring-2 focus:ring-green-400"
+            required
+          >
+          <input
+            type="url"
+            id="backend-url"
+            placeholder="后台地址"
+            class="p-2 border rounded focus:ring-2 focus:ring-green-400"
+            required
+          >
+        </div>
+        <button
+          type="submit"
+          class="w-full md:w-auto px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+        >
+          添加客户
+        </button>
+      </form>
+    </div>
+
+    <!-- 客户列表 -->
+    <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+      <table class="w-full">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-6 py-3 text-left text-sm font-medium text-gray-500">编号</th>
+            <th class="px-6 py-3 text-left text-sm font-medium text-gray-500">客户名称</th>
+            <th class="px-6 py-3 text-left text-sm font-medium text-gray-500">后台地址</th>
+            <th class="px-6 py-3 text-center text-sm font-medium text-gray-500">操作</th>
+          </tr>
+        </thead>
+        <tbody id="client-list" class="divide-y divide-gray-200"></tbody>
+      </table>
+      
+      <!-- 分页 -->
+      <div id="pagination" class="p-4 flex items-center justify-between border-t border-gray-200"></div>
+    </div>
+  </div>
+
+  <!-- 编辑弹窗模板 -->
+  <div id="edit-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+    <div class="bg-white rounded-xl p-6 w-full max-w-md">
+      <h3 class="text-xl font-bold mb-4">修改客户信息</h3>
+      <form id="edit-form" class="space-y-4">
+        <input type="hidden" id="edit-id">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">客户编号</label>
+          <input 
+            type="text" 
+            id="edit-code" 
+            class="w-full p-2 border rounded"
+            readonly
+          >
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">客户名称</label>
+          <input 
+            type="text" 
+            id="edit-name" 
+            class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-400"
+            required
+          >
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">后台地址</label>
+          <input 
+            type="url" 
+            id="edit-url" 
+            class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-400"
+            required
+          >
+        </div>
+        <div class="flex gap-2 justify-end">
+          <button 
+            type="button"
+            onclick="closeEdit()"
+            class="px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
+          >
+            取消
+          </button>
+          <button 
+            type="submit" 
+            class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            保存修改
+          </button>
+        </div>
+      </form>
+    </div>
   </div>
 
   <script>
-    // 从环境变量获取后端地址（部署时在 Zeabur 中配置）
-    const API_URL = 'https://client-management-backend.zeabur.app'; // 替换为你的后端域名
+    // 配置参数
+    const API_URL = 'https://your-backend.zeabur.app'; // 替换为实际后端地址
+    let currentPage = 1;
 
-    // 加载客户列表
-    function loadClients() {
-      fetch(`${API_URL}/clients`)
-        .then(response => response.json())
-        .then(data => {
-          const clientList = document.getElementById('client-list');
-          clientList.innerHTML = ''; // 清空列表
-          data.forEach(client => {
-            const li = document.createElement('li');
-            const a = document.createElement('a');
-            a.href = client.backend_url;
-            a.textContent = `${client.client_code} - ${client.client_name}`;
-            a.target = '_blank'; // 在新标签页打开链接
-            li.appendChild(a);
-            clientList.appendChild(li);
-          });
-        });
+    // 初始化加载
+    window.addEventListener('DOMContentLoaded', () => {
+      loadClients();
+      setupFormValidation();
+    });
+
+    // 加载客户数据
+    async function loadClients(page = 1) {
+      try {
+        const response = await fetch(`${API_URL}/clients?page=${page}&pageSize=25`);
+        const { data, total } = await response.json();
+        
+        renderClientList(data);
+        renderPagination(total);
+        currentPage = page;
+      } catch (error) {
+        showError('加载数据失败');
+      }
     }
 
-    // 初始化加载数据
-    loadClients();
+    // 渲染客户列表
+    function renderClientList(clients) {
+      const tbody = document.getElementById('client-list');
+      tbody.innerHTML = clients.map(client => `
+        <tr class="hover:bg-gray-50">
+          <td class="px-6 py-4 font-mono">${client.client_code}</td>
+          <td class="px-6 py-4">${client.client_name}</td>
+          <td class="px-6 py-4">
+            <a 
+              href="${client.backend_url}" 
+              target="_blank"
+              class="text-blue-500 hover:text-blue-700"
+            >
+              进入后台
+            </a>
+          </td>
+          <td class="px-6 py-4 text-center">
+            <button 
+              onclick="openEdit(${client.id}, '${client.client_code}', '${client.client_name}', '${client.backend_url}')"
+              class="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600"
+            >
+              编辑
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    }
 
-    // 添加新客户
-    document.getElementById('add-client-form').addEventListener('submit', function(event) {
-      event.preventDefault();
+    // 分页组件
+    function renderPagination(total) {
+      const totalPages = Math.ceil(total / 25);
+      const pagination = document.getElementById('pagination');
+      pagination.innerHTML = `
+        <div class="flex-1 text-sm text-gray-700">
+          共 ${total} 条，第 ${currentPage} 页
+        </div>
+        <div class="flex gap-1">
+          ${Array.from({ length: totalPages }, (_, i) => `
+            <button
+              class="px-3 py-1 rounded ${currentPage === i+1 ? 'bg-blue-500 text-white' : 'bg-white hover:bg-gray-100'}"
+              onclick="loadClients(${i+1})"
+            >
+              ${i+1}
+            </button>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    // 表单验证
+    function setupFormValidation() {
+      document.getElementById('add-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const client = {
+          client_code: document.getElementById('client-code').value,
+          client_name: document.getElementById('client-name').value,
+          backend_url: document.getElementById('backend-url').value
+        };
+
+        try {
+          const response = await fetch(`${API_URL}/clients`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(client)
+          });
+
+          if (!response.ok) throw new Error();
+          
+          document.getElementById('add-form').reset();
+          loadClients(currentPage);
+          showSuccess('添加成功');
+        } catch {
+          showError('添加失败，请检查数据格式');
+        }
+      });
+    }
+
+    // 编辑功能
+    async function openEdit(id, code, name, url) {
+      document.getElementById('edit-modal').classList.remove('hidden');
+      document.getElementById('edit-id').value = id;
+      document.getElementById('edit-code').value = code;
+      document.getElementById('edit-name').value = name;
+      document.getElementById('edit-url').value = url;
+    }
+
+    function closeEdit() {
+      document.getElementById('edit-modal').classList.add('hidden');
+    }
+
+    document.getElementById('edit-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
       const client = {
-        client_code: document.getElementById('client-code').value,
-        client_name: document.getElementById('client-name').value,
-        backend_url: document.getElementById('backend-url').value
+        client_name: document.getElementById('edit-name').value,
+        backend_url: document.getElementById('edit-url').value
       };
 
-      fetch(`${API_URL}/clients`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(client)
-      })
-        .then(response => {
-          if (!response.ok) {
-            return response.text().then(text => { throw new Error(text) });
-          }
-          return response.json();
-        })
-        .then(() => {
-          alert('Client added successfully');
-          document.getElementById('add-client-form').reset(); // 清空表单
-          loadClients(); // 刷新列表
-        })
-        .catch(error => {
-          alert('Error: ' + error.message);
+      try {
+        const response = await fetch(`${API_URL}/clients/${document.getElementById('edit-id').value}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(client)
         });
+
+        if (!response.ok) throw new Error();
+        
+        closeEdit();
+        loadClients(currentPage);
+        showSuccess('修改成功');
+      } catch {
+        showError('修改失败');
+      }
     });
 
+    // 工具函数
+    function showSuccess(message) {
+      alert(message);
+    }
 
-    // 新增搜索函数
-function searchClient() {
-  const keyword = document.getElementById('search-input').value.trim().toUpperCase();
-  const clientList = document.getElementById('client-list');
-  clientList.innerHTML = ''; // 清空当前列表
-
-  fetch(`${API_URL}/clients`)
-    .then(response => response.json())
-    .then(data => {
-      // 过滤匹配项（模糊搜索）
-      const filtered = data.filter(client => 
-        client.client_code.toUpperCase().includes(keyword)
-      );
-      // 渲染结果
-      filtered.forEach(client => {
-        const li = document.createElement('li');
-        const a = document.createElement('a');
-        a.href = client.backend_url;
-        a.textContent = `${client.client_code} - ${client.client_name}`;
-        a.target = '_blank';
-        li.appendChild(a);
-        clientList.appendChild(li);
-      });
-    });
-}
-
-// 新增：弹出编辑表单
-function openEditForm(client) {
-  const formHtml = `
-    <div id="edit-form" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border: 1px solid #ddd; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
-      <h3>修改客户信息</h3>
-      <label>客户编号：<input type="text" id="edit-code" value="${client.client_code}" readonly></label><br>
-      <label>客户名称：<input type="text" id="edit-name" value="${client.client_name}" required></label><br>
-      <label>后台地址：<input type="text" id="edit-url" value="${client.backend_url}" required></label><br>
-      <button onclick="saveEdit(${client.id})">保存</button>
-      <button onclick="closeEditForm()">取消</button>
-    </div>
-  `;
-  document.body.insertAdjacentHTML('beforeend', formHtml);
-}
-
-// 新增：关闭编辑表单
-function closeEditForm() {
-  document.getElementById('edit-form').remove();
-}
-
-// 新增：保存修改
-function saveEdit(id) {
-  const client = {
-    client_name: document.getElementById('edit-name').value,
-    backend_url: document.getElementById('edit-url').value
-  };
-
-  fetch(`${API_URL}/clients/${id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(client)
-  })
-    .then(response => {
-      if (!response.ok) throw new Error('保存失败');
-      closeEditForm();
-      loadClients(); // 刷新列表
-      alert('修改成功！');
-    })
-    .catch(error => alert(error.message));
-}
-
-// 修改原有渲染代码，添加点击事件
-function renderClient(client) {
-  const li = document.createElement('li');
-  const a = document.createElement('a');
-  a.href = client.backend_url;
-  a.textContent = `${client.client_code} - ${client.client_name}`;
-  a.target = '_blank';
-  // 添加右键菜单（可选）
-  a.addEventListener('click', (e) => {
-    e.preventDefault(); // 阻止默认跳转
-    openEditForm(client);
-  });
-  li.appendChild(a);
-  return li;
-}
-
-// 修改 loadClients 函数中的渲染逻辑
-function loadClients() {
-  fetch(`${API_URL}/clients`)
-    .then(response => response.json())
-    .then(data => {
-      const clientList = document.getElementById('client-list');
-      clientList.innerHTML = '';
-      data.forEach(client => {
-        clientList.appendChild(renderClient(client));
-      });
-    });
-}
-
-// 加载分页数据
-function loadClients(page = 1) {
-  fetch(`${API_URL}/clients?page=${page}&pageSize=25`)
-    .then(response => response.json())
-    .then(({ data, total, page, pageSize }) => {
-      const clientList = document.getElementById('client-list');
-      clientList.innerHTML = '';
-      data.forEach(client => {
-        clientList.appendChild(renderClient(client));
-      });
-
-      // 渲染分页按钮
-      renderPagination(total, page, pageSize);
-    });
-}
-
-// 渲染分页按钮
-function renderPagination(total, currentPage, pageSize) {
-  const totalPages = Math.ceil(total / pageSize);
-  const pagination = document.getElementById('pagination');
-  pagination.innerHTML = '';
-
-  for (let i = 1; i <= totalPages; i++) {
-    const button = document.createElement('button');
-    button.textContent = i;
-    button.style.margin = '0 5px';
-    button.disabled = i === currentPage;
-    button.onclick = () => loadClients(i);
-    pagination.appendChild(button);
-  }
-}
-
-// 初始化加载第一页
-loadClients(1);
-
-function searchClient() {
-  const keyword = document.getElementById('search-input').value.trim().toUpperCase();
-  const page = 1; // 搜索时默认加载第一页
-
-  fetch(`${API_URL}/clients?page=${page}&pageSize=25`)
-    .then(response => response.json())
-    .then(({ data, total }) => {
-      const filtered = data.filter(client => 
-        client.client_code.toUpperCase().includes(keyword)
-      );
-
-      const clientList = document.getElementById('client-list');
-      clientList.innerHTML = '';
-      filtered.forEach(client => {
-        clientList.appendChild(renderClient(client));
-      });
-
-      // 清空分页（或根据搜索后的总数重新渲染）
-      document.getElementById('pagination').innerHTML = '';
-    });
-}
+    function showError(message) {
+      alert(`❌ ${message}`);
+    }
   </script>
 </body>
 </html>
