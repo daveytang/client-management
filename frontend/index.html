@@ -5,13 +5,34 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>玄古客户终端管理系统</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* 弹窗动画 */
+    .modal-enter {
+      opacity: 0;
+      transform: translateY(-20px);
+    }
+    .modal-enter-active {
+      opacity: 1;
+      transform: translateY(0);
+      transition: all 0.3s ease;
+    }
+    .modal-exit {
+      opacity: 1;
+    }
+    .modal-exit-active {
+      opacity: 0;
+      transform: translateY(-20px);
+      transition: all 0.3s ease;
+    }
+  </style>
 </head>
 <body class="bg-gray-100">
-  <div class="container mx-auto px-4 py-8 max-w-6xl">
-    <!-- 搜索和添加区域 -->
-    <div class="bg-white rounded-xl shadow-lg p-6 mb-6 sticky top-4 z-50">
-      <h1 class="text-3xl font-bold text-gray-800 mb-6">客户终端管理</h1>
+  <!-- 顶部固定区域 -->
+  <div class="sticky top-0 bg-white shadow-lg p-6 z-40">
+    <div class="max-w-6xl mx-auto">
+      <h1 class="text-3xl font-bold text-gray-800 mb-4 text-center">客户终端管理</h1>
       
+      <!-- 搜索框 -->
       <div class="flex gap-4 mb-6">
         <input 
           type="text" 
@@ -27,13 +48,14 @@
         </button>
       </div>
 
-      <form id="add-form" class="bg-gray-50 p-4 rounded-lg space-y-4">
-        <h2 class="text-xl font-semibold text-gray-700">添加新客户</h2>
+      <!-- 添加表单 -->
+      <form id="add-form" class="bg-gray-50 p-6 rounded-xl shadow-inner">
+        <h2 class="text-xl font-semibold text-gray-700 mb-4">添加新客户</h2>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <input
             type="text"
             id="client-code"
-            placeholder="客户编号 (JW001)"
+            placeholder="JW001"
             class="p-2 border rounded focus:ring-2 focus:ring-green-400"
             pattern="JW\d{3}"
             required
@@ -48,21 +70,23 @@
           <input
             type="url"
             id="backend-url"
-            placeholder="后台地址"
+            placeholder="https://example.com"
             class="p-2 border rounded focus:ring-2 focus:ring-green-400"
             required
           >
         </div>
         <button
           type="submit"
-          class="w-full md:w-auto px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+          class="mt-4 w-full md:w-auto px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
         >
           添加客户
         </button>
       </form>
     </div>
+  </div>
 
-    <!-- 客户列表 -->
+  <!-- 客户列表 -->
+  <div class="max-w-6xl mx-auto px-4 py-8">
     <div class="bg-white rounded-xl shadow-lg overflow-hidden">
       <table class="w-full">
         <thead class="bg-gray-50">
@@ -81,23 +105,34 @@
     </div>
   </div>
 
-  <!-- 编辑弹窗模板 -->
-  <div id="edit-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-    <div class="bg-white rounded-xl p-6 w-full max-w-md">
-      <h3 class="text-xl font-bold mb-4">修改客户信息</h3>
+  <!-- 编辑弹窗 -->
+  <div id="edit-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center">
+    <div class="absolute inset-0 bg-black bg-opacity-50" onclick="closeEdit()"></div>
+    
+    <div class="relative bg-white rounded-xl p-6 w-full max-w-md mx-4 modal-content">
+      <button 
+        onclick="closeEdit()"
+        class="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl"
+      >
+        &times;
+      </button>
+      
+      <h3 class="text-xl font-bold mb-6">修改客户信息</h3>
       <form id="edit-form" class="space-y-4">
         <input type="hidden" id="edit-id">
+        
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">客户编号</label>
+          <label class="block text-sm font-medium text-gray-700 mb-2">客户编号</label>
           <input 
             type="text" 
             id="edit-code" 
-            class="w-full p-2 border rounded"
+            class="w-full p-2 border rounded bg-gray-100"
             readonly
           >
         </div>
+        
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">客户名称</label>
+          <label class="block text-sm font-medium text-gray-700 mb-2">客户名称</label>
           <input 
             type="text" 
             id="edit-name" 
@@ -105,8 +140,9 @@
             required
           >
         </div>
+        
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">后台地址</label>
+          <label class="block text-sm font-medium text-gray-700 mb-2">后台地址</label>
           <input 
             type="url" 
             id="edit-url" 
@@ -114,17 +150,18 @@
             required
           >
         </div>
-        <div class="flex gap-2 justify-end">
-          <button 
+
+        <div class="flex gap-3 justify-end pt-4">
+          <button
             type="button"
             onclick="closeEdit()"
-            class="px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
+            class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
           >
             取消
           </button>
-          <button 
-            type="submit" 
-            class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          <button
+            type="submit"
+            class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
           >
             保存修改
           </button>
@@ -135,7 +172,7 @@
 
   <script>
     // 配置参数
-    const API_URL = 'https://client-management-backend.zeabur.app'; // 替换为实际后端地址
+    const API_URL = 'https://client-management-backend.zeabur.app';
     let currentPage = 1;
 
     // 初始化加载
@@ -154,7 +191,7 @@
         renderPagination(total);
         currentPage = page;
       } catch (error) {
-        showError('加载数据失败');
+        showError('加载数据失败，请检查网络连接');
       }
     }
 
@@ -169,15 +206,15 @@
             <a 
               href="${client.backend_url}" 
               target="_blank"
-              class="text-blue-500 hover:text-blue-700"
+              class="text-blue-500 hover:text-blue-700 font-medium"
             >
               进入后台
             </a>
           </td>
           <td class="px-6 py-4 text-center">
             <button 
-              onclick="openEdit(${client.id}, '${client.client_code}', '${client.client_name}', '${client.backend_url}')"
-              class="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600"
+              onclick="openEdit('${client.id}', '${client.client_code}', '${client.client_name}', '${client.backend_url}')"
+              class="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600"
             >
               编辑
             </button>
@@ -191,13 +228,13 @@
       const totalPages = Math.ceil(total / 25);
       const pagination = document.getElementById('pagination');
       pagination.innerHTML = `
-        <div class="flex-1 text-sm text-gray-700">
-          共 ${total} 条，第 ${currentPage} 页
+        <div class="text-sm text-gray-600">
+          共 ${total} 条，当前第 ${currentPage} 页
         </div>
         <div class="flex gap-1">
           ${Array.from({ length: totalPages }, (_, i) => `
             <button
-              class="px-3 py-1 rounded ${currentPage === i+1 ? 'bg-blue-500 text-white' : 'bg-white hover:bg-gray-100'}"
+              class="px-3 py-1 rounded-lg ${currentPage === i+1 ? 'bg-blue-500 text-white' : 'bg-gray-100 hover:bg-gray-200'}"
               onclick="loadClients(${i+1})"
             >
               ${i+1}
@@ -229,23 +266,29 @@
           
           document.getElementById('add-form').reset();
           loadClients(currentPage);
-          showSuccess('添加成功');
+          showSuccess('客户添加成功');
         } catch {
-          showError('添加失败，请检查数据格式');
+          showError('添加失败，请检查编号格式 (JW001)');
         }
       });
     }
 
     // 编辑功能
-    async function openEdit(id, code, name, url) {
-      document.getElementById('edit-modal').classList.remove('hidden');
+    function openEdit(id, code, name, url) {
+      document.body.style.overflow = 'hidden';
+      const modal = document.getElementById('edit-modal');
+      modal.classList.remove('hidden');
+      
       document.getElementById('edit-id').value = id;
       document.getElementById('edit-code').value = code;
       document.getElementById('edit-name').value = name;
       document.getElementById('edit-url').value = url;
+      
+      document.getElementById('edit-name').focus();
     }
 
     function closeEdit() {
+      document.body.style.overflow = 'auto';
       document.getElementById('edit-modal').classList.add('hidden');
     }
 
@@ -270,18 +313,23 @@
         loadClients(currentPage);
         showSuccess('修改成功');
       } catch {
-        showError('修改失败');
+        showError('修改失败，请检查后台地址格式');
       }
     });
 
     // 工具函数
     function showSuccess(message) {
-      alert(message);
+      alert(`✅ ${message}`);
     }
 
     function showError(message) {
       alert(`❌ ${message}`);
     }
+
+    // ESC键关闭
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeEdit();
+    });
   </script>
 </body>
 </html>
